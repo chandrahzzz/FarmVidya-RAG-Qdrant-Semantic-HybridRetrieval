@@ -1,0 +1,33 @@
+# Secrets — NEVER commit these
+.env
+*.pem
+*.key
+service_account*.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Cache files (regeneratable)
+slumber_cache/chunks_*.json
+benchmark_cache/
+logs/
+
+# Keep the active chunk data so team can use it without re-running ingestion
+!slumber_cache/rechunked.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
