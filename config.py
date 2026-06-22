@@ -36,3 +36,6 @@ EMBED_DIM       = 3072
 
 VERTEX_LOCATION = "asia-south1"
 VERTEX_MODEL_ID = "gemini-2.5-flash"
+
+# ── Sarvam AI (Speech-to-Text) ────────────────────────────────────────────────
+SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "")

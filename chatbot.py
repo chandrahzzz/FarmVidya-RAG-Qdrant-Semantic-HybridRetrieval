@@ -35,6 +35,7 @@ from config import (
     VERTEX_SA_PROJECT_ID, VERTEX_SA_PRIVATE_KEY_ID,
     VERTEX_SA_PRIVATE_KEY, VERTEX_SA_CLIENT_EMAIL, VERTEX_SA_CLIENT_ID,
     VERTEX_LOCATION, VERTEX_MODEL_ID,
+    SARVAM_API_KEY,
 )
 
 # ── Logging setup ─────────────────────────────────────────────────────────────
@@ -330,6 +331,30 @@ RULES:
 """
 
 
+# ── Sarvam AI Speech-to-Text ─────────────────────────────────────────────────
+def transcribe_audio(audio_bytes: bytes, mime_type: str = "audio/webm") -> str:
+    """Send audio to Sarvam AI and return Telugu transcript."""
+    try:
+        ext = "webm" if "webm" in mime_type else mime_type.split("/")[-1]
+        logger.info(f"STT_REQUEST | mime={mime_type} ext={ext} size={len(audio_bytes)}B")
+        resp = requests.post(
+            "https://api.sarvam.ai/speech-to-text",
+            headers={"api-subscription-key": SARVAM_API_KEY},
+            files={"file": (f"audio.{ext}", audio_bytes, mime_type)},
+            data={"language_code": "te-IN", "model": "saarika:v2.5"},
+            timeout=30,
+        )
+        logger.info(f"STT_RESPONSE | status={resp.status_code} | {resp.text[:300]}")
+        if resp.status_code == 200:
+            transcript = resp.json().get("transcript", "").strip()
+            logger.info(f"STT | transcript='{transcript}'")
+            return transcript
+        logger.warning(f"STT_FAIL | status={resp.status_code} | {resp.text[:300]}")
+    except Exception as e:
+        logger.error(f"STT_ERROR | {e}")
+    return ""
+
+
 def generate_answer(raw_query: str, chunks: list[dict]) -> tuple[str, float, str]:
     """Returns (answer, generation_time_s, model_used)."""
     context = "\n\n".join(
@@ -393,8 +418,26 @@ for msg in st.session_state.messages:
                     st.text_area("", c["text"], height=80, key=f"h_{msg['ts']}_{i}")
                     st.divider()
 
+# ── voice input ───────────────────────────────────────────────────────────────
+audio = st.audio_input("🎤 మాట్లాడండి — నొక్కి మీ ప్రశ్న చెప్పండి")
+audio_query = None
+if audio:
+    audio_bytes = audio.read()
+    mime_type   = getattr(audio, "type", "audio/webm")
+    audio_hash  = hash(audio_bytes)
+    if st.session_state.get("_last_audio_hash") != audio_hash:
+        st.session_state["_last_audio_hash"] = audio_hash
+        with st.spinner("మీ మాటలు అర్థం చేసుకుంటున్నాను…"):
+            audio_query = transcribe_audio(audio_bytes, mime_type)
+        if audio_query:
+            st.info(f"🎤 మీరు అన్నది: **{audio_query}**")
+        else:
+            st.warning("మాటలు అర్థం కాలేదు — దయచేసి మళ్ళీ ప్రయత్నించండి.")
+
 # ── chat input ────────────────────────────────────────────────────────────────
-if query := st.chat_input("మీ వ్యవసాయ ప్రశ్న ఇక్కడ టైప్ చేయండి…"):
+text_query = st.chat_input("మీ వ్యవసాయ ప్రశ్న ఇక్కడ టైప్ చేయండి…")
+query = audio_query or text_query
+if query:
     ts = str(time.time())
     logger.info(f"QUERY | {query}")
 

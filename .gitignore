@@ -24,9 +24,10 @@ logs/
 # Keep the active chunk data so team can use it without re-running ingestion
 !slumber_cache/rechunked.json
 
-# IDE
+# IDE & tools
 .vscode/
 .idea/
+.claude/
 
 # OS
 .DS_Store
