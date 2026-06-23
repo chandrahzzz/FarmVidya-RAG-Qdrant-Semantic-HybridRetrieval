@@ -16,13 +16,13 @@ venv/
 dist/
 build/
 
-# Cache files (regeneratable)
-slumber_cache/chunks_*.json
+# Company knowledge base — do NOT commit
+muralichunks.txt
+slumber_cache/
+
+# Cache files
 benchmark_cache/
 logs/
-
-# Keep the active chunk data so team can use it without re-running ingestion
-!slumber_cache/rechunked.json
 
 # IDE & tools
 .vscode/
